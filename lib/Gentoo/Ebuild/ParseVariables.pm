@@ -10,7 +10,7 @@ BEGIN {
 
 use Sub::Exporter -setup => { exports => [qw( gentoo_ebuild_var )] };
 use Shell::EnvImporter;
-use File::Spec;
+use File::ShareDir;
 #use Data::Dumper;
 
 sub gentoo_ebuild_var {
@@ -19,8 +19,8 @@ sub gentoo_ebuild_var {
 	$ebuild_vars ||= _ebuild_vars();
 	$portdir     ||= "/usr/portage";
 
-	my $fixed_eclasses = _installed_file_for_module('Gentoo::Ebuild::ParseVariables')."ParseVariables";
-	my $ebuildsh       = _installed_file_for_module('Gentoo::Ebuild::ParseVariables')."ParseVariables/ebuild.sh";
+	my $fixed_eclasses = File::ShareDir::module_dir('Gentoo::Ebuild::ParseVariables');
+	my $ebuildsh       = File::ShareDir::module_file('Gentoo::Ebuild::ParseVariables','ebuild.sh');
 
 	$ebuild =~ qr,(?<repo>.+)/(?<category>[^/]+)/(?<package>[^/]+)/\g{package}-(?<version>.+)\.ebuild,;
 	my $repo     = $+{repo};
@@ -65,31 +65,17 @@ sub gentoo_ebuild_var {
 }
 
 sub _sanitize {
-	my ($var) = @_;
-	$var =~ s/^\$//g;
-	$var =~ s/^(')(.*)\1$/$2/g;
-	$var =~ s/(')(.*)\1/$2/g;
-	$var =~ s/\\[nt]/ /g;
-	$var =~ s/\\'/'/g;
-	$var =~ s/'+/'/g;
-	$var =~ s/ +/ /g;
-	$var =~ s/^ +//g;
-	$var =~ s/ +$//g;
-	return $var;
+	my ($v) = @_;
+	$v=~s/^\$'(.*)'$/$1/m;
+	$v=~s/^'(.*)'$/$1/m;
+	$v=~s/'\\''/'/g;
+	$v=~s/\\'/'/g;
+	$v=~s/\\[tn]/ /g;
+	$v=~s/^\s+//;
+	$v=~s/\s+$//;
+	$v=~s/\s{2,}/ /g;
+	return $v;
 }
-
-sub _installed_file_for_module {
-    my $prereq = shift;
-
-    my $file = "$prereq.pm";
-    $file =~ s{::}{/}g;
-
-    for my $dir (@INC) {
-        my $tmp = File::Spec->catfile($dir, $file);
-        return (File::Spec->splitpath($tmp))[1] if ( -r $tmp );
-    }
-}
-
 
 sub _ebuild_vars {
 	return [ qw(
@@ -114,11 +100,8 @@ sub _ebuild_vars {
 		SLOT
 		KEYWORDS
 		IUSE
-		OIUSE
 
 		DEPEND
-		ODEPEND
-		EDEPEND
 		RDEPEND
 		PDEPEND
 
