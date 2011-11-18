@@ -32,6 +32,7 @@ sub gentoo_ebuild_var {
 
 	my $command;
 	$command.="unset $_; " for ( @{$ebuild_vars} );
+	$command.="export ";
 	$command.="EBUILD=$ebuild ";
 	$command.="ECLASSDIR=$portdir/eclass ";
 	$command.="PORTDIR_OVERLAY='$repo $fixed_eclasses' ";
@@ -42,6 +43,7 @@ sub gentoo_ebuild_var {
 	$command.="PF=$pn-$pvr ";
 	$command.="PR=$pr ";
 	$command.="P=$pn-$pv ";
+	$command.="; ";
 	$command.="source $ebuildsh ";
 
 	my $sourcer  = Shell::EnvImporter->new(
@@ -88,6 +90,12 @@ sub _ebuild_vars {
 		MODULE_EXT
 		MODULE_PN
 		MODULE_PV
+		CATEGORY
+		P
+		PN
+		PV
+		PVR
+		PF
 		MY_P
 		MY_PN
 		MY_PV

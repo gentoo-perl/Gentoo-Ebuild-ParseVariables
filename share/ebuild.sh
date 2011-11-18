@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 1999-2011 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
 
 EBUILD_PHASE=depend
 
@@ -17,9 +19,6 @@ qa_source() {
 	return $retval
 }
 
-
-
-
 # Prevent aliases from causing portage to act inappropriately.
 # Make sure it's before everything so we don't mess aliases that follow.
 unalias -a
@@ -30,19 +29,21 @@ unset GZIP BZIP BZIP2 CDPATH GREP_OPTIONS GREP_COLOR GLOBIGNORE
 source "${PORTAGE_BIN_PATH}/isolated-functions.sh"  &>/dev/null
 
 
-use() {
-	useq ${1}
+useq() {
+	eqawarn "QA Notice: The 'useq' function is deprecated (replaced by 'use')"
+	use ${1}
 }
 
+
 usev() {
-	if useq ${1}; then
+	if use ${1}; then
 		echo "${1#!}"
 		return 0
 	fi
 	return 1
 }
 
-useq() {
+use() {
 	local u=$1
 	local found=0
 
@@ -57,7 +58,7 @@ useq() {
 		# any number of phase hooks, so that global scope eclass
 		# initialization can by migrated to phase hooks in new EAPIs.
 		# Example: add_phase_hook before pkg_setup $ECLASS_pre_pkg_setup
-		#if [[ -n $EAPI ]] && ! hasq "$EAPI" 0 1 2 3 ; then
+		#if [[ -n $EAPI ]] && ! has "$EAPI" 0 1 2 3 ; then
 		#	die "use() called during invalid phase: $EBUILD_PHASE"
 		#fi
 		true
@@ -69,13 +70,12 @@ useq() {
 				"in IUSE for ${CATEGORY}/${PF}"
 	fi
 
-	if hasq ${u} ${USE} ; then
+	if has ${u} ${USE} ; then
 		return ${found}
 	else
 		return $((!found))
 	fi
 }
-
 
 # Return true if given package is installed. Otherwise return false.
 # Takes single depend-type atoms.
@@ -113,7 +113,7 @@ use_with() {
 	fi
 	local UWORD=${2:-$1}
 
-	if useq $1; then
+	if use $1; then
 		echo "--with-${UWORD}${UW_SUFFIX}"
 	else
 		echo "--without-${UWORD}"
@@ -135,7 +135,7 @@ use_enable() {
 	fi
 	local UWORD=${2:-$1}
 
-	if useq $1; then
+	if use $1; then
 		echo "--enable-${UWORD}${UE_SUFFIX}"
 	else
 		echo "--disable-${UWORD}"
@@ -211,7 +211,7 @@ inherit() {
 		[ ! -e "$location" ] && die "${1}.eclass could not be found by inherit()"
 
 		if [ "${location}" == "${olocation}" ] && \
-			! hasq "${location}" ${EBUILD_OVERLAY_ECLASSES} ; then
+			! has "${location}" ${EBUILD_OVERLAY_ECLASSES} ; then
 				EBUILD_OVERLAY_ECLASSES="${EBUILD_OVERLAY_ECLASSES} ${location}"
 		fi
 
@@ -273,7 +273,7 @@ inherit() {
 		fi
 		unset $__export_funcs_var
 
-		hasq $1 $INHERITED || export INHERITED="$INHERITED $1"
+		has $1 $INHERITED || export INHERITED="$INHERITED $1"
 
 		shift
 	done
@@ -298,134 +298,13 @@ EXPORT_FUNCTIONS() {
 	eval $__export_funcs_var+=\" $*\"
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		# In order to ensure correct interaction between ebuilds and
 		# eclasses, they need to be unset before this process of
 		# interaction begins.
 		unset DEPEND RDEPEND PDEPEND IUSE REQUIRED_USE
 
 		if [[ $PORTAGE_DEBUG != 1 || ${-/x/} != $- ]] ; then
-			source "$EBUILD" || die "error1 sourcing ebuild"
+			source "$EBUILD" || die "error sourcing ebuild"
 		else
 			set -x
 			source "$EBUILD" || die "error sourcing ebuild"
@@ -483,4 +362,4 @@ EXPORT_FUNCTIONS() {
 		done
 		[[ -n $DEFINED_PHASES ]] || DEFINED_PHASES=-
 
-    unset _f _valid_phases
+		unset _f _valid_phases

@@ -1,6 +1,6 @@
-# Copyright 1999-2009 Gentoo Foundation
+# Copyright 1999-2011 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/eutils.eclass,v 1.353 2011/01/09 02:16:53 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/eclass/eutils.eclass,v 1.358 2011/07/08 11:35:01 ssuominen Exp $
 
 # @ECLASS: eutils.eclass
 # @MAINTAINER:
@@ -291,9 +291,9 @@ epatch() {
 		local a=${patchname#*_} # strip the ???_
 		a=${a%%_*}              # strip the _foo.patch
 		if ! [[ ${SINGLE_PATCH} == "yes" || \
-		        ${EPATCH_FORCE} == "yes" || \
-		        ${a} == all     || \
-		        ${a} == ${ARCH} ]]
+				${EPATCH_FORCE} == "yes" || \
+				${a} == all     || \
+				${a} == ${ARCH} ]]
 		then
 			continue
 		fi
@@ -499,7 +499,7 @@ egetent() {
 	*-darwin[678])
 		case "$2" in
 		*[!0-9]*) # Non numeric
-			nidump $1 . | awk -F":" "{ if (\$1 ~ /^$2$/) {print \$0;exit;} }"
+			nidump $1 . | awk -F":" "{ if (\$1 ~ /^$2\$/) {print \$0;exit;} }"
 			;;
 		*)	# Numeric
 			nidump $1 . | awk -F":" "{ if (\$3 == $2) {print \$0;exit;} }"
@@ -1393,9 +1393,9 @@ unpack_makeself() {
 	esac
 
 	# lets grab the first few bytes of the file to figure out what kind of archive it is
-	local tmpfile=$(emktemp)
+	local filetype tmpfile=$(emktemp)
 	eval ${exe} 2>/dev/null | head -c 512 > "${tmpfile}"
-	local filetype=$(file -b "${tmpfile}")
+	filetype=$(file -b "${tmpfile}") || die
 	case ${filetype} in
 		*tar\ archive*)
 			eval ${exe} | tar --no-same-owner -xf -
@@ -1715,9 +1715,9 @@ strip-linguas() {
 			fi
 			for f in $(find "$d" -name '*.po' -exec basename {} .po ';') ; do
 				if [[ ${op} == "-i" ]] ; then
-					hasq ${f} ${ls} && newls="${newls} ${f}"
+					has ${f} ${ls} && newls="${newls} ${f}"
 				else
-					hasq ${f} ${ls} || newls="${newls} ${f}"
+					has ${f} ${ls} || newls="${newls} ${f}"
 				fi
 			done
 			ls=${newls}
@@ -1729,7 +1729,7 @@ strip-linguas() {
 	nols=""
 	newls=""
 	for f in ${LINGUAS} ; do
-		if hasq ${f} ${ls} ; then
+		if has ${f} ${ls} ; then
 			newls="${newls} ${f}"
 		else
 			nols="${nols} ${f}"
@@ -1794,6 +1794,8 @@ preserve_old_lib_notify() {
 			ewarn "helper program, simply emerge the 'gentoolkit' package."
 			ewarn
 		fi
+		# temp hack for #348634 #357225
+		[[ ${PN} == "mpfr" ]] && lib=${lib##*/}
 		ewarn "  # revdep-rebuild --library '${lib}'"
 	done
 	if [[ ${notice} -eq 1 ]] ; then
@@ -1949,30 +1951,6 @@ EOF
 		newbin "${tmpwrapper}" "${wrapper}" || die
 	fi
 }
-
-# @FUNCTION: prepalldocs
-# @USAGE:
-# @DESCRIPTION:
-# Compress files in /usr/share/doc which are not already
-# compressed, excluding /usr/share/doc/${PF}/html.
-# Uses the ecompressdir to do the compression.
-# 2009-02-18 by betelgeuse:
-# Commented because ecompressdir is even more internal to
-# Portage than prepalldocs (it's not even mentioned in man 5
-# ebuild). Please submit a better version for review to gentoo-dev
-# if you want prepalldocs here.
-#prepalldocs() {
-#	if [[ -n $1 ]] ; then
-#		ewarn "prepalldocs: invalid usage; takes no arguments"
-#	fi
-
-#	cd "${D}"
-#	[[ -d usr/share/doc ]] || return 0
-
-#	find usr/share/doc -exec gzip {} +
-#	ecompressdir --ignore /usr/share/doc/${PF}/html
-#	ecompressdir --queue /usr/share/doc
-#}
 
 # @FUNCTION: path_exists
 # @USAGE: [-a|-o] <paths>
