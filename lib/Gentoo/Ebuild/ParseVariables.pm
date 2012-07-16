@@ -13,20 +13,6 @@ use Shell::EnvImporter;
 use File::ShareDir;
 #use Data::Dumper;
 
-sub _mandatory_variable {
-    my $variable = shift;
-    my $mandatory = {
-	DESCRIPTION => 1,
-	HOMEPAGE => 1,
-	IUSE => 1,
-	KEYWORDS => 1,
-	SLOT => 1,
-	SRC_URI => 1,
-	LICENSE => 1,
-    };
-    return $mandatory->{$variable};
-}
-
 sub gentoo_ebuild_var {
 
 	my ( $ebuild, $ebuild_vars, $portdir ) = @_;
@@ -74,7 +60,6 @@ sub gentoo_ebuild_var {
 
 	my $retval= {};
 	for my $var ( @{$ebuild_vars} ) {
-		print "* $category/$pn-$pvr : $var not defined\n" if not defined $ENV{$var} and _mandatory_variable($var);
 		$retval->{$var} = _sanitize($ENV{$var}) if defined $ENV{$var};
 	}
 	$sourcer->restore_env();
